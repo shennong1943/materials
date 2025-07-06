@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        
+        
+/**
+ * 验证输入数据是否存在于data1或data2中（根据配置过滤后）
+ * @param {string} inputData - 输入数据字符串，例如 "domain1,domain2"
+ * @param {string} levelType - 层级类型，"0" 表示data1，"1" 表示data2
+ * @param {Object} config - 配置对象
+ * @param {string} config.domain - 域配置（逗号分隔的字符串）
+ * @param {string} config.plate - 板块配置（逗号分隔的字符串）
+ * @param {string} config.module - 模块配置（逗号分隔的字符串）
+ * @param {number} domainLevel - 域层级配置 (1-3)
+ * @param {number} itLevel - IT层级配置 (1-3)
+ * @param {string[]} businessDomain - 隐藏的业务域列表
+ * @param {string[]} businessPlate - 隐藏的业务板块列表
+ * @param {string[]} businessModule - 隐藏的业务模块列表
+ * @param {string[]} itApp - 隐藏的IT应用列表
+ * @param {string[]} itModule - 隐藏的IT模块列表
+ * @param {string[]} itFunction - 隐藏的IT功能列表
+ * @param {boolean} userTarget - 是否只显示targetFlag为'Y'的数据
+ * @param {Array} data1 - 第一组数据源
+ * @param {Array} data2 - 第二组数据源
+ * @returns {boolean} - 输入数据中是否存在不在data1或data2中的数据
+ */
+ function validateInputData(inputData, levelType, config, domainLevel, itLevel, 
+                          businessDomain, businessPlate, businessModule, 
+                          itApp, itModule, itFunction, userTarget, data1, data2) {
+    // 根据levelType选择数据源
+    const sourceData = levelType === "0" ? data1 : data2;
+    const levelConfig = levelType === "0" ? domainLevel : itLevel;
+    
+    // 获取对应配置的隐藏项列表
+    const hiddenDomains = levelType === "0" ? businessDomain : itApp;
+    const hiddenPlates = levelType === "0" ? businessPlate : itModule;
+    const hiddenModules = levelType === "0" ? businessModule : itFunction;
+    
+    // 解析输入数据为数组
+    const inputItems = inputData.split(',').filter(item => item.trim() !== '');
+    
+    // 解析配置中的domain、plate、module为数组
+    const parsedConfig = {
+        domain: config.domain?.split(',').filter(d => d.trim() !== '') || [],
+        plate: config.plate?.split(',').filter(p => p.trim() !== '') || [],
+        module: config.module?.split(',').filter(m => m.trim() !== '') || []
+    };
+    
+    // 根据配置过滤数据源
+    let filteredData = sourceData;
+    
+    // 应用userTarget过滤
+    if (userTarget) {
+        filteredData = filteredData.filter(item => item.targetFlag === 'Y');
+    }
+    
+    // 应用隐藏项过滤
+    filteredData = filteredData.filter(item => 
+        !(hiddenDomains?.includes(item.domainName) || 
+          hiddenPlates?.includes(item.plateName) || 
+          hiddenModules?.includes(item.moduleName))
+    );
+    
+    // 根据层级配置进一步过滤
+    if (levelConfig <= 2) {
+        filteredData = filteredData.filter(item => 
+            parsedConfig.domain.includes(item.domainName) || 
+            parsedConfig.domain.includes("ALL")
+        );
+    }
+    
+    if (levelConfig <= 3) {
+        filteredData = filteredData.filter(item => 
+            (parsedConfig.plate.includes(item.plateName) || parsedConfig.plate.includes("ALL")) &&
+            (parsedConfig.domain.includes(item.domainName) || parsedConfig.domain.includes("ALL"))
+        );
+    }
+    
+    // 确定当前层级
+    let currentLevel;
+    if (parsedConfig.module.length > 0 && !parsedConfig.module.includes("ALL")) {
+        currentLevel = "module";
+    } else if (parsedConfig.plate.length > 0 && !parsedConfig.plate.includes("ALL")) {
+        currentLevel = "plate";
+    } else if (parsedConfig.domain.length > 0 && !parsedConfig.domain.includes("ALL")) {
+        currentLevel = "domain";
+    } else {
+        // 默认从domain层级开始
+        currentLevel = "domain";
+    }
+    
+    // 验证每个输入项
+    for (const item of inputItems) {
+        let exists = false;
+        
+        switch (currentLevel) {
+            case "domain":
+                exists = filteredData.some(dataItem => dataItem.domainName === item);
+                break;
+            case "plate":
+                exists = filteredData.some(dataItem => 
+                    dataItem.plateName === item && 
+                    parsedConfig.domain.includes(dataItem.domainName)
+                );
+                break;
+            case "module":
+                exists = filteredData.some(dataItem => 
+                    dataItem.moduleName === item && 
+                    parsedConfig.plate.includes(dataItem.plateName) &&
+                    parsedConfig.domain.includes(dataItem.domainName)
+                );
+                break;
+        }
+        
+        // 只要有一个不存在，就返回true（存在无效数据）
+        if (!exists) {
+            return true;
+        }
+    }
+    
+    // 所有项都存在，返回false（没有无效数据）
+    return false;
+}      
+
+
+        const data1 = [
+            { domainName: "domain1", plateName: "plate1-1", moduleName: "module1-1-1", targetFlag: 'Y' },
+            { domainName: "domain1", plateName: "plate1-1", moduleName: "module1-1-2", targetFlag: 'N' },
+            { domainName: "domain1", plateName: "plate1-2", moduleName: "module1-2-1", targetFlag: 'Y' },
+            { domainName: "domain2", plateName: "plate2-1", moduleName: "module2-1-1", targetFlag: 'Y' },
+            { domainName: "domain2", plateName: "plate2-2", moduleName: "module2-2-2", targetFlag: 'Y' },
+            { domainName: "domain2", plateName: "plate2-3", moduleName: "module2-3-3", targetFlag: 'Y' },
+            { domainName: "domain2", plateName: "plate2-3", moduleName: "module2-3-4", targetFlag: 'N' }
+        ];
+
+        const data2 = [
+            { domainName: "domains1", plateName: "plates1-1", moduleName: "modules1-1-1", targetFlag: 'Y' },
+            { domainName: "domains1", plateName: "plates1-2", moduleName: "modules1-2-2", targetFlag: 'N' }
+        ];
+
+        console.log(validateInputData('module2-3-4', '0', { domain: 'domain2', plate: 'plate2-3', module: 'module2-3-4' }, 3, 3, [], [], ['module2-3-3'], undefined, undefined, undefined, true, data1, data2))
+
+    </script>
+</body>
+</html>
