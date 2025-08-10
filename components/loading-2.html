@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>依次上下跳动的圆点加载动画</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        .dot {
+            width: 16px;
+            height: 16px;
+            margin: 0 8px;
+            border-radius: 50%;
+            background-color: #10b981; /* 绿色系 */
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        
+        /* 依次设置动画延迟，创造依次跳动的效果 */
+        .dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px); /* 向上跳动的距离 */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="loading-container">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+</body>
+</html>
+    
