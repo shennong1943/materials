@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>豆包AI对话 - Vue2版</title>
+  <!-- 引入Vue 2核心库 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  
+  <style>
+    /* 基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #F5F7FA;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #333;
+    }
+    
+    /* 顶部导航 */
+    header {
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .header-content {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: #165DFF;
+    }
+    
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      background-color: #165DFF;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .clear-chat-btn {
+      background: none;
+      border: none;
+      color: #4E5969;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    
+    .clear-chat-btn:hover {
+      background-color: rgba(22, 93, 255, 0.1);
+      color: #165DFF;
+    }
+    
+    /* 主要内容区域 */
+    main {
+      flex-grow: 1;
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+    
+    #chatContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding-bottom: 80px;
+    }
+    
+    /* 消息样式 */
+    .message {
+      animation: messageAppear 0.3s ease-out forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    
+    @keyframes messageAppear {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .ai-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .user-message {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    
+    .ai-avatar {
+      background-color: #165DFF;
+      color: white;
+    }
+    
+    .user-avatar {
+      background-color: #E5E7EB;
+      color: #4B5563;
+    }
+    
+    .message-content {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      position: relative;
+    }
+    
+    .ai-content {
+      background-color: white;
+      border-top-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .user-content {
+      background-color: #165DFF;
+      color: white;
+      border-top-right-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    /* 关键词区域 */
+    .keywords-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      animation: messageAppear 0.3s ease-out forwards;
+      opacity: 0;
+      transform: translateY(10px);
+      animation-delay: 0.2s;
+    }
+    
+    .keyword-btn {
+      background-color: #E8F3FF;
+      color: #165DFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .keyword-btn:hover {
+      background-color: rgba(22, 93, 255, 0.2);
+    }
+    
+    /* 思考过程样式 */
+    .thinking-container {
+      background-color: #F3F4F6;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border-top-left-radius: 4px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .thinking-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #4E5969;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    
+    .thinking-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(78, 89, 105, 0.3);
+      border-radius: 50%;
+      border-top-color: #4E5969;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .thinking-text {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.5;
+    }
+    
+    /* 思考过程切换按钮 */
+    .thinking-toggle-container {
+      margin-bottom: 8px;
+    }
+    
+    .thinking-toggle {
+      background: none;
+      border: none;
+      color: #165DFF;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+    }
+    
+    .thinking-toggle:hover {
+      text-decoration: underline;
+    }
+    
+    /* 底部输入区域 */
+    footer {
+      background-color: white;
+      border-top: 1px solid #E5E7EB;
+      padding: 16px;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+    
+    .input-container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    
+    .user-input {
+      width: 100%;
+      border: 1px solid #D1D5DB;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 1rem;
+      resize: none;
+      height: 40px;
+      transition: height 0.3s ease-in-out, border-color 0.2s;
+      outline: none;
+    }
+    
+    .user-input:focus {
+      border-color: #165DFF;
+      box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.2);
+    }
+    
+    .send-btn-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+    
+    .send-btn {
+      background-color: #165DFF;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.2s;
+    }
+    
+    .send-btn:hover {
+      background-color: #0E4CD1;
+    }
+    
+    .send-btn:disabled {
+      background-color: #94BFFF;
+      cursor: not-allowed;
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 640px) {
+      .message-content {
+        max-width: 80%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部导航 -->
+    <header>
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+            </svg>
+          </div>
+          <span>豆包AI对话</span>
+        </div>
+        <button class="clear-chat-btn" @click="clearChat" :disabled="isThinking">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span class="hidden sm:inline">新对话</span>
+        </button>
+      </div>
+    </header>
+    
+    <!-- 主要内容区域 -->
+    <main>
+      <div id="chatContainer">
+        <!-- 欢迎消息 -->
+        <div class="message ai-message" v-if="messages.length === 0">
+          <div class="avatar ai-avatar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <div class="message-content ai-content">
+            <p>你好，我是豆包</p>
+          </div>
+        </div>
+        
+        <!-- 关键词区域 -->
+        <div class="keywords-container" v-if="messages.length === 0">
+          <button class="keyword-btn" v-for="keyword in keywords" :key="keyword" @click="selectKeyword(keyword)">
+            {{ keyword }}
+          </button>
+        </div>
+        
+        <!-- 对话消息列表 -->
+        <div v-for="(message, index) in messages" :key="index" :class="['message', message.isUser ? 'user-message' : 'ai-message']">
+          <!-- 用户消息 -->
+          <template v-if="message.isUser">
+            <div class="message-content user-content">
+              <p>{{ message.content }}</p>
+            </div>
+            <div class="avatar user-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          </template>
+          
+          <!-- AI消息 -->
+          <template v-else>
+            <div class="avatar ai-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div class="max-w-[85%]">
+              <!-- 思考过程 -->
+              <div class="thinking-container" v-if="message.showThinking">
+                <div class="thinking-header">
+                  <div class="thinking-spinner" v-if="message.isThinking"></div>
+                  <span>正在思考</span>
+                </div>
+                <div class="thinking-text">{{ message.thinkingText }}</div>
+              </div>
+              
+              <!-- 思考过程展开/收起控制 -->
+              <div class="thinking-toggle-container" v-if="!message.isThinking">
+                <button class="thinking-toggle" @click="toggleThinking(index)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9" v-if="!message.showThinking"></polyline>
+                    <polyline points="18 15 12 9 6 15" v-if="message.showThinking"></polyline>
+                  </svg>
+                  <span>{{ message.showThinking ? '隐藏思考过程' : '显示思考过程' }}</span>
+                </button>
+              </div>
+              
+              <!-- 回答内容 -->
+              <div class="message-content ai-content" v-if="!message.isThinking">
+                <div>{{ message.answerText }}</div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 底部输入区域 -->
+    <footer>
+      <div class="input-container">
+        <textarea 
+          class="user-input"
+          v-model="userInput"
+          @focus="inputFocused = true"
+          @blur="inputFocused = false"
+          @keydown.enter.exact="sendMessage"
+          @keydown.enter.shift.exact="addNewline"
+          :style="{ height: inputHeight }"
+          placeholder="请输入你的问题..."
+          :disabled="isThinking"
+        ></textarea>
+        <div class="send-btn-container">
+          <button class="send-btn" @click="sendMessage" :disabled="isThinking || !userInput.trim()">
+            <span>发送</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+  
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          // 对话消息列表
+          messages: [],
+          // 用户输入内容
+          userInput: '',
+          // 输入框高度
+          inputHeight: '40px',
+          // 输入框是否获得焦点
+          inputFocused: false,
+          // 是否正在思考
+          isThinking: false,
+          // 预设关键词
+          keywords: [
+            '什么是人工智能？',
+            '推荐一本好书',
+            '今天天气如何？',
+            '如何学习编程？',
+            '介绍一下你自己'
+          ]
+        };
+      },
+      watch: {
+        // 监听用户输入变化，自动调整输入框高度
+        userInput() {
+          // 临时移除高度限制以计算实际需要的高度
+          this.inputHeight = 'auto';
+          
+          // 获取textarea元素
+          const textarea = document.querySelector('.user-input');
+          if (textarea) {
+            // 设置新高度，不超过100px
+            const newHeight = Math.min(textarea.scrollHeight, 100);
+            this.inputHeight = `${newHeight}px`;
+          }
+        },
+        
+        // 监听输入框焦点状态
+        inputFocused(focused) {
+          if (focused) {
+            // 获得焦点时展开到100px
+            this.inputHeight = '100px';
+          } else {
+            // 失去焦点且内容较少时收缩
+            const textarea = document.querySelector('.user-input');
+            if (textarea && textarea.scrollHeight <= 40) {
+              this.inputHeight = '40px';
+            }
+          }
+        }
+      },
+      methods: {
+        // 发送消息
+        sendMessage() {
+          const message = this.userInput.trim();
+          if (!message || this.isThinking) return;
+          
+          // 添加用户消息
+          this.messages.push({
+            isUser: true,
+            content: message
+          });
+          
+          // 清空输入框
+          this.userInput = '';
+          this.inputHeight = '40px';
+          
+          // 滚动到底部
+          this.scrollToBottom();
+          
+          // 开始AI思考和回复
+          this.processAndRespond(message);
+        },
+        
+        // 处理并生成回复
+        processAndRespond(question) {
+          this.isThinking = true;
+          
+          // 添加AI消息占位符
+          const aiMessageIndex = this.messages.push({
+            isUser: false,
+            isThinking: true,
+            showThinking: true,
+            thinkingText: '',
+            answerText: ''
+          }) - 1;
+          
+          // 滚动到底部
+          this.scrollToBottom();
+          
+          // 生成思考过程
+          const thinkingTexts = this.generateThinkingText(question);
+          let thinkingIndex = 0;
+          let charIndex = 0;
+          
+          const thinkingInterval = setInterval(() => {
+            if (thinkingIndex < thinkingTexts.length) {
+              const currentText = thinkingTexts[thinkingIndex];
+              
+              if (charIndex < currentText.length) {
+                // 逐字添加思考内容
+                this.messages[aiMessageIndex].thinkingText += currentText[charIndex];
+                charIndex++;
+                this.scrollToBottom();
+              } else {
+                // 一段思考完成，换行
+                this.messages[aiMessageIndex].thinkingText += '\n';
+                thinkingIndex++;
+                charIndex = 0;
+              }
+            } else {
+              clearInterval(thinkingInterval);
+              
+              // 思考完成，准备生成回答
+              this.messages[aiMessageIndex].isThinking = false;
+              this.messages[aiMessageIndex].showThinking = false;
+              
+              // 生成回答并逐字显示
+              const answer = this.generateAnswer(question);
+              let answerCharIndex = 0;
+              
+              const answerInterval = setInterval(() => {
+                if (answerCharIndex < answer.length) {
+                  this.messages[aiMessageIndex].answerText += answer[answerCharIndex];
+                  answerCharIndex++;
+                  this.scrollToBottom();
+                } else {
+                  clearInterval(answerInterval);
+                  // 回答完成，恢复状态
+                  this.isThinking = false;
+                }
+              }, 30);
+            }
+          }, 50);
+        },
+        
+        // 切换思考过程显示/隐藏
+        toggleThinking(index) {
+          this.messages[index].showThinking = !this.messages[index].showThinking;
+          this.scrollToBottom();
+        },
+        
+        // 选择关键词
+        selectKeyword(keyword) {
+          this.userInput = keyword;
+          this.inputFocused = true;
+          // 触发input事件以调整高度
+          this.$nextTick(() => {
+            const event = new Event('input', { bubbles: true });
+            document.querySelector('.user-input').dispatchEvent(event);
+          });
+        },
+        
+        // 添加换行
+        addNewline() {
+          this.userInput += '\n';
+          // 确保Vue检测到变化
+          this.$forceUpdate();
+        },
+        
+        // 清空对话
+        clearChat() {
+          if (this.isThinking) return;
+          this.messages = [];
+        },
+        
+        // 滚动到底部
+        scrollToBottom() {
+          this.$nextTick(() => {
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: 'smooth'
+            });
+          });
+        },
+        
+        // 生成模拟思考过程
+        generateThinkingText(question) {
+          if (question.includes('人工智能')) {
+            return [
+              "用户问什么是人工智能...",
+              "我需要先解释基本定义，然后举一些例子。",
+              "还要提到它的应用领域，让解释更具体。",
+              "应该保持简洁明了，避免太专业的术语。",
+              "好的，思路差不多清晰了，可以组织语言回答了。"
+            ];
+          } else if (question.includes('书')) {
+            return [
+              "用户想让我推荐一本书...",
+              "应该考虑不同类型的书籍，比如小说、非虚构类等。",
+              "或许推荐一本经典且广受欢迎的书比较好。",
+              "《百年孤独》怎么样？很多人喜欢，而且是经典之作。",
+              "可以简单介绍一下这本书的特点和为什么推荐它。"
+            ];
+          } else if (question.includes('天气')) {
+            return [
+              "用户问今天天气如何...",
+              "我没办法获取实时天气数据，但可以给一些建议。",
+              "可以建议用户查看当地的天气预报应用。",
+              "或者提醒用户根据季节和常见天气情况做好准备。",
+              "这样回答既诚实又有帮助。"
+            ];
+          } else if (question.includes('编程')) {
+            return [
+              "用户想知道如何学习编程...",
+              "首先应该建议选择一门适合初学者的语言，比如Python。",
+              "然后推荐一些学习资源，比如在线课程、书籍等。",
+              "强调实践的重要性，多做项目很关键。",
+              "还可以建议加入学习社区，遇到问题可以求助。"
+            ];
+          } else if (question.includes('介绍')) {
+            return [
+              "用户想让我介绍自己...",
+              "我是豆包，一个AI助手，可以回答各种问题。",
+              "需要说明我的功能，比如聊天、解答疑问等。",
+              "保持友好的语气，让用户感觉亲切。",
+              "可以邀请用户提出更多问题。"
+            ];
+          } else {
+            return [
+              "我来看看这个问题...",
+              "需要理解用户到底想知道什么。",
+              "组织一下思路，确保回答准确有用。",
+              "检查有没有遗漏的要点。",
+              "好的，准备回答了。"
+            ];
+          }
+        },
+        
+        // 生成模拟回答
+        generateAnswer(question) {
+          if (question.includes('人工智能')) {
+            return "人工智能（AI）是计算机科学的一个分支，它致力于创造能够模拟人类智能的系统。这些系统可以学习、推理、识别模式并做出决策。常见的AI应用包括语音助手、推荐系统、自动驾驶技术和图像识别等。人工智能正在各个领域改变我们的生活和工作方式，并且仍在快速发展中。";
+          } else if (question.includes('书')) {
+            return "我推荐加西亚·马尔克斯的《百年孤独》。这是一部魔幻现实主义的经典之作，讲述了布恩迪亚家族七代人的传奇故事。书中融合了奇幻与现实，探讨了爱情、孤独、权力和时间等永恒主题。其独特的叙事风格和丰富的想象力使其成为20世纪最重要的文学作品之一，适合所有喜欢深度阅读的读者。";
+          } else if (question.includes('天气')) {
+            return "很抱歉，我目前无法获取实时天气信息。你可以通过手机上的天气应用、搜索引擎或当地的气象网站查询最新的天气情况。另外，建议根据季节变化提前做好相应准备，比如夏季注意防晒防暑，冬季注意保暖防寒。如果有其他问题，我会尽力为你解答！";
+          } else if (question.includes('编程')) {
+            return "学习编程可以从以下几个步骤开始：1. 选择一门适合初学者的编程语言，如Python，它语法简洁易懂；2. 通过在线课程或入门书籍系统学习基础知识；3. 多做实践，从简单的小程序开始，逐步挑战更复杂的项目；4. 加入编程社区，学习他人的代码并分享自己的作品；5. 坚持练习，编程是一项需要不断实践的技能。最重要的是保持好奇心和解决问题的热情！";
+          } else if (question.includes('介绍')) {
+            return "你好！我是豆包，一个人工智能助手。我可以陪你聊天、解答各种问题，包括科学知识、生活常识、技术问题等。无论你是想讨论某个话题，还是需要帮助解决难题，都可以跟我说。我会尽力提供有用的信息和建议。如果你有任何需求，随时告诉我哦！";
+          } else {
+            return `你问的是"${question}"啊。这个问题很有意思。根据我的理解，${question}涉及到多个方面的内容。首先，它可能与日常生活相关，也可能涉及专业知识。要全面理解这个问题，我们可以从不同角度来分析。不过，由于信息有限，我只能提供一个概括性的回答。如果你需要更详细的信息，可以补充一些背景，我会尽力为你解答。`;
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
