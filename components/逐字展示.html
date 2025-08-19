@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文字逐字显示效果</title>
+  <style>
+    .typewriter {
+      font-family: 'Courier New', monospace;
+      font-size: 24px;
+      white-space: pre-wrap; /* 保留换行 */
+      overflow: hidden; /* 隐藏超出部分 */
+      position: relative;
+      min-height: 30px;
+    }
+    
+    .typewriter-text {
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    .typewriter-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* 光标效果 */
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 24px;
+      background-color: #333;
+      animation: blink 1s step-end infinite;
+      margin-left: 3px;
+    }
+    
+    @keyframes blink {
+      from, to { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="typewriter">
+    <span class="typewriter-text"></span>
+    <span class="cursor"></span>
+  </div>
+
+  <script>
+    // 要显示的文本
+    const text = "这是一段逐字显示的文字效果演示。通过CSS和JavaScript的配合，我们可以实现类似打字机的效果，让文字一个字一个字地展示出来。";
+    
+    // 获取元素
+    const textElement = document.querySelector('.typewriter-text');
+    const cursorElement = document.querySelector('.cursor');
+    
+    // 逐字显示函数
+    function typeWriter(text, index = 0, speed = 100) {
+      if (index < text.length) {
+        // 追加一个字符
+        textElement.textContent += text.charAt(index);
+        // 添加可见类以触发动画
+        textElement.classList.add('visible');
+        // 递归调用，继续显示下一个字符
+        setTimeout(() => typeWriter(text, index + 1, speed), speed);
+      } else {
+        // 所有文字显示完毕后隐藏光标
+        cursorElement.style.display = 'none';
+      }
+    }
+    
+    // 开始显示文字
+    setTimeout(() => {
+      typeWriter(text);
+    }, 500);
+  </script>
+</body>
+</html>
