@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>窄蓝条文字动画效果</title>
+    <style>
+        :root {
+            --s-color-text-tertiary: #999; /* 基础文字颜色（淡灰色） */
+            --s-color-text-primary: #0066cc;  /* 流动条颜色（蓝色） */
+        }
+        
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        .container {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        .animated-text {
+            font-size: 3rem;
+            font-weight: bold;
+            animation: text-flow 4s ease-in-out infinite;
+            background: var(--s-color-text-tertiary);
+            background-image: linear-gradient(
+                to right, 
+                transparent, 
+                var(--s-color-text-primary), 
+                transparent
+            );
+            background-repeat: no-repeat;
+            background-position: 0 0;
+            -webkit-background-clip: text;
+            background-clip: text;
+            background-size: 30% 100%; /* 蓝条宽度调整为30%（更窄） */
+            color: transparent;
+            width: fit-content;
+            white-space: nowrap;
+        }
+        
+        @keyframes text-flow {
+            0% {
+                background-position: -100% 0; /* 从左侧外部开始 */
+            }
+            50% {
+                background-position: 100% 0; /* 移动到右侧 */
+            }
+            100% {
+                background-position: 300% 0; /* 移动到右侧外部 */
+            }
+        }
+        
+        .explanation {
+            margin-top: 1.5rem;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="animated-text">深度思考中...</div>
+        <p class="explanation">窄蓝条会从左到右划过文字</p>
+    </div>
+</body>
+</html>
